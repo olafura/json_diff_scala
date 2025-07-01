@@ -13,8 +13,11 @@ lazy val core = (projectMatrix in file("."))
   .settings(
     name := "json-diff-scala",
     libraryDependencies += "org.playframework" %% "play-json" % "3.0.4",
-    libraryDependencies += "org.scalatest"    %% "scalatest" % "3.2.15" % Test,
+    libraryDependencies += "org.scalatest"    %% "scalatest" % "3.2.19" % Test,
   )
   .jvmPlatform(scalaVersions = Seq("3.3.4"))
   .jsPlatform(scalaVersions = Seq("3.3.4"))
-  .nativePlatform(scalaVersions = Seq("3.3.4"))
+  // .nativePlatform(
+  //   scalaVersions = Seq("3.3.4"),
+  //   libraryDependencies += "org.scalatest"    %% "scalatest_native0.5" % "3.2.19" % Test,
+  // )
