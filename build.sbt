@@ -9,10 +9,11 @@ ThisBuild / developers += Developer(
   url = url("http://github.com/olafura/")
 )
 
-lazy val core = (projectMatrix in file("src"))
+lazy val core = (projectMatrix in file("."))
   .settings(
     name := "json-diff-scala",
     libraryDependencies += "org.playframework" %% "play-json" % "3.0.4",
+    libraryDependencies += "org.scalatest"    %% "scalatest" % "3.2.15" % Test,
   )
   .jvmPlatform(scalaVersions = Seq("3.3.4"))
   .jsPlatform(scalaVersions = Seq("3.3.4"))
