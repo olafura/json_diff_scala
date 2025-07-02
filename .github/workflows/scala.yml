@@ -23,4 +23,4 @@ jobs:
     - uses: actions/checkout@v4
     - uses: olafurpg/setup-scala@v11
     - name: Run tests
-      run: sbt test
+      run: sbt core3/test coreJS3/test coreNative3/test
