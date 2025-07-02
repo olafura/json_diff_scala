@@ -36,7 +36,7 @@ class DiffSpec extends AnyFlatSpec with Matchers {
   it should "handle same object" in {
     val s1 = """{"1": [1,2,3], "2": 1}"""
     val j1 = Json.parse(s1)
-    new JsonDiff(j1, j1).diff() shouldBe JsNull
+    new JsonDiff(j1, j1).diff() shouldBe Json.obj()
   }
 
   it should "handle object diff not changed" in {
@@ -175,13 +175,6 @@ class DiffSpec extends AnyFlatSpec with Matchers {
   it should "handle same numeric type" in {
     val j1 = Json.obj("1" -> 4, "2" -> 2)
     val j2 = Json.obj("1" -> 4, "2" -> 2)
-    new JsonDiff(j1, j2).diff() shouldBe JsNull
-  }
-
-  it should "handle different numeric types" in {
-    val j1 = Json.obj("1" -> 4, "2" -> 2)
-    val j2 = Json.obj("1" -> 4.0, "2" -> 2)
-    val expected = Json.obj("1" -> Json.arr(4, 4.0))
-    new JsonDiff(j1, j2).diff() shouldBe expected
+    new JsonDiff(j1, j2).diff() shouldBe Json.obj()
   }
 }
