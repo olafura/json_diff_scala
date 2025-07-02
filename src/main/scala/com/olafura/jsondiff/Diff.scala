@@ -82,5 +82,28 @@ class JsonDiff(oldJson: JsValue, newJson: JsValue):
       if diff.isEmpty then JsNull
       else JsObject(diff + ("_t" -> JsString("a")))
 
+    case (JsObject(o1), JsObject(o2)) =>
+      val keysNonUniq = o1.keySet ++ o2.keySet
+
+      val diff =
+        keysNonUniq.toSeq
+          .map { k =>
+            (
+              k,
+              (o1.get(k), o2.get(k)) match {
+                case (Some(v1), Some(v2)) => doDiff(v1, v2)
+                case (Some(v1), None) =>
+                  JsArray(Seq(v1, JsNumber(0), JsNumber(0)))
+                case (None, Some(v2)) => JsArray(Seq(v2))
+                case (None, None)     => JsNull
+              }
+            )
+          }
+          .filterNot { case (_, v) => v == JsNull }
+          .toMap
+
+      if diff.isEmpty then JsNull
+      else JsObject(diff)
+
     case (a, b) if a == b => JsNull
     case (a, b)           => JsArray(Seq(a, b))
