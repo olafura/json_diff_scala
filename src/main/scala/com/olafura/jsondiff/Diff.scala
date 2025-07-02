@@ -6,7 +6,9 @@ import com.olafura.jsondiff.Myers
 case class ArrayAcc(count: Int, deletedCount: Int, acc: Map[String, JsValue])
 
 class JsonDiff(oldJson: JsValue, newJson: JsValue):
-  def diff(): JsValue = doDiff(oldJson, newJson)
+  def diff(): JsValue = doDiff(oldJson, newJson) match
+    case JsNull => JsObject(Map.empty[String, JsValue])
+    case diff    => diff
 
   def splitUnderscoreMap(key: String, value: JsValue): Boolean =
     (key, value) match
