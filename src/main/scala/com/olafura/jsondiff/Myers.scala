@@ -6,22 +6,26 @@
 
 package com.olafura.jsondiff
 
-import scala.annotation.tailrec 
-import scala.collection.immutable.IndexedSeq
+import scala.annotation.tailrec
+import scala.collection.IndexedSeq
 import scala.collection.immutable.List
-
 
 case class Equals(value: List[Any])
 case class Insert(value: List[Any])
 case class Delete(value: List[Any])
 
 type Diff = Equals | Insert | Delete
-type DiffList = List[Diff] 
+type DiffList = List[Diff]
 
 case class Done(value: DiffList)
-case class Path(index: Int, oldSeq: List[Any], newSeq: List[Any], edits: DiffList)
+case class Path(
+    index: Int,
+    oldSeq: List[Any],
+    newSeq: List[Any],
+    edits: DiffList
+)
 
-type PathList = List[Path] 
+type PathList = List[Path]
 
 case class ProcessedPath(path: Option[Path], rest: PathList)
 
@@ -42,26 +46,36 @@ class Myers(oldSeq: IndexedSeq[Any], newSeq: IndexedSeq[Any]):
         find(envelope + 1, max, paths)
 
   @tailrec
-  private def compactReverse(edits: DiffList, acc: DiffList): DiffList = (edits, acc) match
-    case (Nil, _) =>
-      acc
-    case (Equals(elem) :: rest, Equals(result) :: accRest) =>
-      compactReverse(rest, Equals(elem ::: result) :: accRest)
-    case (Insert(elem) :: rest, Insert(result) :: accRest) =>
-      compactReverse(rest, Insert(elem ::: result) :: accRest)
-    case (Delete(elem) :: rest, Delete(result) :: accRest) =>
-      compactReverse(rest, Delete(elem ::: result) :: accRest)
-    case (rest, Equals(elem1) :: Insert(elem2) :: Equals(other) :: accRest) if elem1 == elem2 =>
-      compactReverse(rest, Insert(elem1) :: Equals(elem1 ::: other) :: accRest)
-    case (Equals(elem) :: rest, accRest) =>
-      compactReverse(rest, Equals(elem) :: accRest)
-    case (Insert(elem) :: rest, accRest) =>
-      compactReverse(rest, Insert(elem) :: accRest)
-    case (Delete(elem) :: rest, accRest) =>
-      compactReverse(rest, Delete(elem) :: accRest)
+  private def compactReverse(edits: DiffList, acc: DiffList): DiffList =
+    (edits, acc) match
+      case (Nil, _) =>
+        acc
+      case (Equals(elem) :: rest, Equals(result) :: accRest) =>
+        compactReverse(rest, Equals(elem ::: result) :: accRest)
+      case (Insert(elem) :: rest, Insert(result) :: accRest) =>
+        compactReverse(rest, Insert(elem ::: result) :: accRest)
+      case (Delete(elem) :: rest, Delete(result) :: accRest) =>
+        compactReverse(rest, Delete(elem ::: result) :: accRest)
+      case (rest, Equals(elem1) :: Insert(elem2) :: Equals(other) :: accRest)
+          if elem1 == elem2 =>
+        compactReverse(
+          rest,
+          Insert(elem1) :: Equals(elem1 ::: other) :: accRest
+        )
+      case (Equals(elem) :: rest, accRest) =>
+        compactReverse(rest, Equals(elem) :: accRest)
+      case (Insert(elem) :: rest, accRest) =>
+        compactReverse(rest, Insert(elem) :: accRest)
+      case (Delete(elem) :: rest, accRest) =>
+        compactReverse(rest, Delete(elem) :: accRest)
 
   @tailrec
-  private def eachDiagonal(diagonal: Int, limit: Int, paths: PathList, nextPaths: PathList): Done | Next = (diagonal, limit) match
+  private def eachDiagonal(
+      diagonal: Int,
+      limit: Int,
+      paths: PathList,
+      nextPaths: PathList
+  ): Done | Next = (diagonal, limit) match
     case (diagonal, limit) if diagonal > limit =>
       Next(nextPaths.reverse)
     case _ =>
@@ -69,11 +83,20 @@ class Myers(oldSeq: IndexedSeq[Any], newSeq: IndexedSeq[Any]):
 
       followSnake(processedPath.path) match
         case Continue(path) =>
-          eachDiagonal(diagonal + 2, limit, processedPath.rest, path :: nextPaths)
+          eachDiagonal(
+            diagonal + 2,
+            limit,
+            processedPath.rest,
+            path :: nextPaths
+          )
         case Done(edits) =>
           Done(edits)
 
-  private def processPath(diagonal: Int, limit: Int, paths: PathList): ProcessedPath = (diagonal, limit, paths) match
+  private def processPath(
+      diagonal: Int,
+      limit: Int,
+      paths: PathList
+  ): ProcessedPath = (diagonal, limit, paths) match
     case (0, 0, path :: Nil) =>
       ProcessedPath(Some(path), List())
     case (0, 0, Nil) =>
@@ -105,8 +128,11 @@ class Myers(oldSeq: IndexedSeq[Any], newSeq: IndexedSeq[Any]):
 
   @tailrec
   private def followSnake(path: Option[Path]): Done | Continue = path match
-    case Some(Path(index, elem1 :: rest1, elem2 :: rest2, edits)) if elem1 == elem2 =>
-      followSnake(Some(Path(index + 1, rest1, rest2, Equals(List(elem1)) :: edits)))
+    case Some(Path(index, elem1 :: rest1, elem2 :: rest2, edits))
+        if elem1 == elem2 =>
+      followSnake(
+        Some(Path(index + 1, rest1, rest2, Equals(List(elem1)) :: edits))
+      )
     case Some(Path(_, Nil, Nil, edits)) =>
       Done(edits)
     case Some(other) =>

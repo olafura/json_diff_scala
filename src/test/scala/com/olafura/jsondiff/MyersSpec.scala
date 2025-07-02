@@ -21,8 +21,12 @@ class MyersSpec extends AnyFlatSpec {
       diff(Seq(1, 4, 2, 3), Seq(1, 2, 3)) ==
         List(Equals(List(1)), Delete(List(4)), Equals(List(2, 3)))
     )
-    assert(diff(Seq(1), Seq(List(1))) == List(Delete(List(1)), Insert(List(List(1)))))
-    assert(diff(Seq(List(1)), Seq(1)) == List(Delete(List(List(1))), Insert(List(1))))
+    assert(
+      diff(Seq(1), Seq(List(1))) == List(Delete(List(1)), Insert(List(List(1))))
+    )
+    assert(
+      diff(Seq(List(1)), Seq(1)) == List(Delete(List(List(1))), Insert(List(1)))
+    )
   }
 
   it should "rearranges inserts and equals for smaller diffs" in {
@@ -36,11 +40,21 @@ class MyersSpec extends AnyFlatSpec {
     )
     assert(
       diff(Seq(3, 2, 2, 1, 0, 2), Seq(2, 2, 1, 2, 1, 0, 2)) ==
-        List(Delete(List(3)), Equals(List(2, 2, 1)), Insert(List(2, 1)), Equals(List(0, 2)))
+        List(
+          Delete(List(3)),
+          Equals(List(2, 2, 1)),
+          Insert(List(2, 1)),
+          Equals(List(0, 2))
+        )
     )
     assert(
       diff(Seq(3, 2, 0, 2), Seq(2, 2, 1, 0, 2)) ==
-        List(Delete(List(3)), Equals(List(2)), Insert(List(2, 1)), Equals(List(0, 2)))
+        List(
+          Delete(List(3)),
+          Equals(List(2)),
+          Insert(List(2, 1)),
+          Equals(List(0, 2))
+        )
     )
   }
 }
