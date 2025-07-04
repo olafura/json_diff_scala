@@ -1,41 +1,42 @@
 package com.olafura.jsondiff
 
-import play.api.libs.json._
+import play.api.libs.json.*
 import com.olafura.jsondiff.Myers
 
-case class ArrayAcc(count: Int, deletedCount: Int, acc: Map[String, JsValue])
+import scala.collection.mutable
+
+case class ArrayAcc(count: Int, deletedCount: Int, acc: mutable.Map[String, JsValue])
 
 class JsonDiff(oldJson: JsValue, newJson: JsValue):
   def diff(): JsValue = doDiff(oldJson, newJson) match
-    case JsNull => JsObject(Map.empty[String, JsValue])
+    case JsNull => JsObject(mutable.Map.empty[String, JsValue])
     case diff   => diff
 
-  def splitUnderscoreMap(key: String, value: JsValue): Boolean =
+  private def splitUnderscoreMap(key: String, value: JsValue): Boolean =
     (key, value) match
       case (s"_${_}", JsArray(value)) =>
-        value.toList match
-          case JsObject(obj) :: JsNumber(0) :: JsNumber(0) :: Nil =>
+        value.iterator.to(List) match
+          case JsObject(_) :: JsNumber(0) :: JsNumber(0) :: Nil =>
             true
           case _ =>
             false
-        true
       case _ =>
         false
 
-  def allChecked(
+  private def allChecked(
       list: List[(String, JsValue)],
-      deletedMap: Map[String, JsValue]
+      deletedMap: mutable.Map[String, JsValue]
   ): List[(String, JsValue)] = (list, deletedMap) match
-    case (Nil, deletedMap) => deletedMap.toList
+    case (Nil, deletedMap) => deletedMap.iterator.to(List)
     case (head :: tail, deletedMap) =>
       head match
         case (i: String, JsArray(value)) =>
-          value.toList match
+          value.iterator.to(List) match
             case JsObject(obj) :: Nil =>
-              val negI = s"_${i}"
+              val negI = s"_$i"
               deletedMap.get(negI) match
                 case Some(JsArray(value2)) =>
-                  value2.toList match
+                  value2.iterator.to(List) match
                     case JsObject(obj2) :: JsNumber(0) :: JsNumber(0) :: Nil =>
                       (i, doDiff(JsObject(obj2), JsObject(obj))) :: allChecked(
                         tail,
@@ -52,11 +53,11 @@ class JsonDiff(oldJson: JsValue, newJson: JsValue):
         case _ =>
           head :: allChecked(tail, deletedMap)
 
-  def doDiff(a: JsValue, b: JsValue): JsValue = (a, b) match
+  private def doDiff(a: JsValue, b: JsValue): JsValue = (a, b) match
     case (JsArray(l1), JsArray(l2)) =>
       val arrayAcc = Myers(l1, l2)
         .diff()
-        .foldLeft(ArrayAcc(0, 0, Map.empty[String, JsValue])) { (acc, diff) =>
+        .foldLeft(ArrayAcc(0, 0, mutable.Map.empty[String, JsValue])) { (acc, diff) =>
           diff match
             case Equals(equal) =>
               val equalLength = equal.length
@@ -93,14 +94,14 @@ class JsonDiff(oldJson: JsValue, newJson: JsValue):
 
       val (deleted, checked) = arrayAcc.acc.partition(splitUnderscoreMap)
       val diff =
-        if deleted.isEmpty && checked.isEmpty then arrayAcc.acc
-        else if deleted.isEmpty then arrayAcc.acc
+        if deleted.iterator.isEmpty && checked.iterator.isEmpty then arrayAcc.acc
+        else if deleted.iterator.isEmpty then arrayAcc.acc
         else
           val checkedList =
-            allChecked(checked.toList, deleted).filter((_, v) => v != JsNull)
-          checkedList.toMap
+            allChecked(checked.iterator.to(List), deleted).filter((_, v) => v != JsNull)
+          checkedList.iterator.to(mutable.Map)
 
-      if diff.isEmpty then JsNull
+      if diff.iterator.isEmpty then JsNull
       else JsObject(diff + ("_t" -> JsString("a")))
 
     case (JsObject(o1), JsObject(o2)) =>
@@ -124,9 +125,9 @@ class JsonDiff(oldJson: JsValue, newJson: JsValue):
             )
           }
           .filterNot { case (_, v) => v == JsNull }
-          .toMap
+          .to(mutable.Map)
 
-      if diff.isEmpty then JsNull
+      if diff.iterator.isEmpty then JsNull
       else JsObject(diff)
 
     case (a, b) if a == b && a.getClass == b.getClass => JsNull
