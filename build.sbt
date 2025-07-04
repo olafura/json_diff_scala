@@ -29,3 +29,21 @@ lazy val core = (crossProject(JSPlatform, JVMPlatform, NativePlatform).crossType
     libraryDependencies += "com.typesafe.play" %%% "play-json" % "2.10.6",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.17" % Test
   )
+
+lazy val profile = (crossProject(JSPlatform, JVMPlatform, NativePlatform).crossType(CrossType.Pure) in file("profile"))
+  .dependsOn(core)
+  .settings(
+    name := "profile"
+  )
+  .jvmSettings(
+    scalaVersion := "3.3.4",
+    libraryDependencies += "org.playframework" %% "play-json" % "3.0.4"
+  )
+  .jsSettings(
+    scalaVersion := "3.3.4",
+    libraryDependencies += "org.playframework" %%% "play-json" % "3.0.4"
+  )
+  .nativeSettings(
+    scalaVersion := "3.3.4",
+    libraryDependencies += "com.typesafe.play" %%% "play-json" % "2.10.6"
+  )

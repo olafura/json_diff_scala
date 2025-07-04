@@ -35,3 +35,8 @@ classes/
 
 # Visual Studio Code
 .vscode
+
+
+# Profile data
+
+profile-data/*.json
